@@ -1,0 +1,78 @@
+name: Windows EXE Olustur ve Release Yayinla
+
+on:
+  push:
+    tags:
+      - "v*"          # v1.0.0, v1.2.3 gibi tag'lerde tetiklenir
+  workflow_dispatch:  # Manuel tetikleme (test icin)
+
+permissions:
+  contents: write     # Release olusturmak icin gerekli
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Kodu indir
+        uses: actions/checkout@v4
+
+      - name: Python 3.10 kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Bagimliliklari yukle
+        run: |
+          python -m pip install --upgrade pip
+          pip install PyQt5==5.15.10
+          pip install pyserial websockets pandas numpy scipy networkx requests matplotlib
+          pip install geopandas shapely fiona pyproj osmnx
+          pip install pyinstaller
+
+      - name: EXE olustur
+        run: |
+          pyinstaller `
+            --onedir `
+            --windowed `
+            --name "BinaKaraKutu_GOKCE" `
+            --hidden-import "osmnx" `
+            --hidden-import "geopandas" `
+            --hidden-import "geopandas.array" `
+            --hidden-import "shapely" `
+            --hidden-import "shapely.geometry" `
+            --hidden-import "fiona" `
+            --hidden-import "fiona.ogrext" `
+            --hidden-import "pyproj" `
+            --hidden-import "networkx" `
+            --hidden-import "pandas" `
+            --hidden-import "PyQt5" `
+            --hidden-import "PyQt5.QtCore" `
+            --hidden-import "PyQt5.QtGui" `
+            --hidden-import "PyQt5.QtWidgets" `
+            --hidden-import "serial" `
+            --hidden-import "serial.tools.list_ports" `
+            --hidden-import "websockets" `
+            --collect-all osmnx `
+            --collect-all geopandas `
+            --collect-all shapely `
+            --collect-all fiona `
+            --collect-all pyproj `
+            bina_karakutu.py
+
+      - name: ZIP olustur
+        run: |
+          Compress-Archive -Path dist\BinaKaraKutu_GOKCE\* -DestinationPath BinaKaraKutu_Windows.zip
+
+      - name: GitHub Release olustur ve ZIP yukle
+        uses: softprops/action-gh-release@v2
+        with:
+          files: BinaKaraKutu_Windows.zip
+          name: "Bina Kara Kutu ${{ github.ref_name }}"
+          body: |
+            ## Kurulum
+            1. `BinaKaraKutu_Windows.zip` dosyasini indirin
+            2. ZIP'i bir klasore cikarin
+            3. `BinaKaraKutu_GOKCE.exe` dosyasini calistirin
+
+            **Not:** Ilk acilista harita icin internet baglantisi gereklidir.
