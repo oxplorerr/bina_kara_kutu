@@ -58,6 +58,14 @@ jobs:
             --collect-all shapely `
             --collect-all fiona `
             --collect-all pyproj `
+            --copy-metadata osmnx `
+            --copy-metadata geopandas `
+            --copy-metadata shapely `
+            --copy-metadata fiona `
+            --copy-metadata pyproj `
+            --copy-metadata networkx `
+            --copy-metadata pandas `
+            --copy-metadata requests `
             bina_karakutu.py
 
       - name: ZIP olustur
